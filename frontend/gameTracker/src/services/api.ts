@@ -26,7 +26,7 @@ export interface GameStats {
 }
 
 const API = axios.create({
-    baseURL: "", // Usar rutas relativas para que Nginx haga el proxy
+    baseURL: import.meta.env.VITE_API_URL || "", // Usar variable de entorno o rutas relativas
     headers: {
         "Content-Type": "application/json",
     },
