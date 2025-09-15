@@ -15,8 +15,8 @@ type Game struct {
 	StartedAt    *time.Time `json:"startedAt"`
 	FinishedAt   *time.Time `json:"finishedAt"`
 	CoverURL     string     `json:"coverURL"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
 }
 
 type GameStats struct {

@@ -3,11 +3,11 @@ import { useEffect, useState } from "react"
 import { getStats } from "@/services/api"
 
 type Stats = {
-    TotalGames: number
-    ByStatus: Record<string, number>
-    AverageHours: number
-    MostPlayedGenre: string
-    PendingGames: number
+    total_games: number
+    by_status: Record<string, number>
+    average_hours_played: number
+    most_played_genre: string
+    pending_games: number
 }
 
 export default function StatsPage() {
@@ -35,15 +35,15 @@ export default function StatsPage() {
     return (
         <div className="max-w-md mx-auto bg-white shadow rounded-xl p-6 space-y-4">
             <h2 className="text-2xl font-bold text-center">📊 Estadísticas</h2>
-            <p>Total de juegos: <strong>{stats.TotalGames}</strong></p>
-            <p>Promedio de horas jugadas: <strong>{stats.AverageHours.toFixed(2)}</strong></p>
-            <p>Género más jugado: <strong>{stats.MostPlayedGenre || "N/A"}</strong></p>
-            <p>Juegos pendientes: <strong>{stats.PendingGames}</strong></p>
+            <p>Total de juegos: <strong>{stats.total_games}</strong></p>
+            <p>Promedio de horas jugadas: <strong>{stats.average_hours_played.toFixed(2)}</strong></p>
+            <p>Género más jugado: <strong>{stats.most_played_genre || "N/A"}</strong></p>
+            <p>Juegos pendientes: <strong>{stats.pending_games}</strong></p>
 
             <div>
                 <h3 className="font-semibold mt-4 mb-2">Por estado:</h3>
                 <ul className="list-disc list-inside">
-                    {Object.entries(stats.ByStatus).map(([status, count]) => (
+                    {Object.entries(stats.by_status).map(([status, count]) => (
                         <li key={status}>{status}: {count}</li>
                     ))}
                 </ul>

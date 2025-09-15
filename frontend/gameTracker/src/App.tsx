@@ -13,11 +13,11 @@ import { useNavigate } from "react-router-dom"
 
 
 type Stats = {
-    TotalGames: number
-    ByStatus: Record<string, number>
-    AverageHours: number
-    MostPlayedGenre: string
-    PendingGames: number
+    total_games: number
+    by_status: Record<string, number>
+    average_hours_played: number
+    most_played_genre: string
+    pending_games: number
 }
 
 function App() {
@@ -116,15 +116,15 @@ function App() {
             {stats && (
                 <div className="w-full max-w-3xl p-4 mb-4 bg-white rounded-lg shadow">
                     <h2 className="text-2xl font-semibold mb-2">📊 Estadísticas</h2>
-                    <p><strong>Total de juegos:</strong> {stats.TotalGames}</p>
-                    <p><strong>Juegos pendientes:</strong> {stats.PendingGames}</p>
-                    <p><strong>Horas promedio jugadas:</strong> {stats.AverageHours.toFixed(2)}</p>
-                    <p><strong>Género más jugado:</strong> {stats.MostPlayedGenre}</p>
+                    <p><strong>Total de juegos:</strong> {stats.total_games}</p>
+                    <p><strong>Juegos pendientes:</strong> {stats.pending_games}</p>
+                    <p><strong>Horas promedio jugadas:</strong> {stats.average_hours_played.toFixed(2)}</p>
+                    <p><strong>Género más jugado:</strong> {stats.most_played_genre}</p>
 
                     <div className="mt-2">
                         <strong>Juegos por estado:</strong>
                         <ul className="list-disc list-inside ml-4">
-                            {Object.entries(stats.ByStatus).map(([status, count]) => (
+                            {Object.entries(stats.by_status).map(([status, count]) => (
                                 <li key={status}>
                                     {status}: {count}
                                 </li>
