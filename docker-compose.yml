@@ -28,6 +28,7 @@ services:
 
   # QA Backend API
   backend-qa:
+    image: gametracker-backend:v1.0
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -51,6 +52,7 @@ services:
 
   # QA Frontend
   frontend-qa:
+    image: gametracker-frontend:v1.0
     build:
       context: ./frontend/gameTracker
       dockerfile: Dockerfile
@@ -94,6 +96,7 @@ services:
 
   # PROD Backend API
   backend-prod:
+    image: gametracker-backend:v1.0
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -119,6 +122,7 @@ services:
 
   # PROD Frontend
   frontend-prod:
+    image: gametracker-frontend:v1.0
     build:
       context: ./frontend/gameTracker
       dockerfile: Dockerfile
