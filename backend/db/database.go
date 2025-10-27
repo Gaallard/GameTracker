@@ -75,7 +75,7 @@ func ConnectDB() {
 		sqlDB.SetConnMaxLifetime(30 * time.Minute)
 	}
 
-	if err := DB.AutoMigrate(&models.Game{}); err != nil {
+	if err := DB.AutoMigrate(&models.Game{}, &models.User{}); err != nil {
 		log.Fatal("Error en migración de modelos: ", err)
 	}
 }

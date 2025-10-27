@@ -8,7 +8,11 @@ import {
     CardContent,
 } from "@/components/ui/card"
 import GameForm from "@/components/ui/gameForm"
+import Header from "@/components/ui/Header"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/contexts/AuthContext"
+import LoadingScreen from "@/components/ui/LoadingScreen"
+import AuthPage from "@/components/auth/AuthPage"
 
 
 
@@ -27,9 +31,12 @@ function App() {
     const [detailedGameData, setDetailedGameData] = useState<Game | null>(null)
     const [stats, setStats] = useState<Stats | null>(null)
     const navigate = useNavigate()
+    const { isAuthenticated, isLoading } = useAuth()
 
 
     useEffect(() => {
+        if (!isAuthenticated) return
+
         const fetchGames = async () => {
             try {
                 const res = await getGames()
@@ -50,7 +57,7 @@ function App() {
 
         fetchGames()
         fetchStats()
-    }, [])
+    }, [isAuthenticated])
 
     const refreshStats = async () => {
         try {
@@ -109,9 +116,20 @@ function App() {
         }
     }
 
+    // Mostrar loading mientras se verifica la autenticación
+    if (isLoading) {
+        return <LoadingScreen />
+    }
+
+    // Mostrar página de autenticación si no está autenticado
+    if (!isAuthenticated) {
+        return <AuthPage />
+    }
+
     return (
-        <div className="min-h-svh flex flex-col items-center p-6 gap-6 bg-muted">
-            <h1 className="text-3xl font-bold">🎮 Game Tracker</h1>
+        <div className="min-h-screen bg-gray-50">
+            <Header />
+            <div className="flex flex-col items-center p-6 gap-6">
 
             {stats && (
                 <div className="w-full max-w-3xl p-4 mb-4 bg-white rounded-lg shadow">
@@ -212,6 +230,7 @@ function App() {
                         </div>
                     ))
                 )}
+            </div>
             </div>
         </div>
     )

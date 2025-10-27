@@ -2,9 +2,16 @@ package service
 
 import (
 	"errors"
+
 	"gametracker/db"
 	"gametracker/models"
+
+	"gorm.io/gorm"
 )
+
+// ErrNotFound se usa cuando un recurso no existe.
+// Úsalo en controllers/tests con errors.Is(err, service.ErrNotFound)
+var ErrNotFound = errors.New("game not found")
 
 func GetAllGames() ([]models.Game, error) {
 	var games []models.Game
@@ -16,7 +23,11 @@ func GetGameByID(id string) (models.Game, error) {
 	var game models.Game
 	result := db.DB.First(&game, id)
 	if result.Error != nil {
-		return game, errors.New("game not found")
+		// No logeamos record not found: es un flujo esperado.
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return game, ErrNotFound
+		}
+		return game, result.Error
 	}
 	return game, nil
 }
@@ -26,10 +37,21 @@ func CreateGame(game *models.Game) error {
 }
 
 func UpdateGame(game *models.Game) error {
+	// Save funciona, pero si querés evitar upsert accidental:
+	// return db.DB.Model(&models.Game{}).Where("id = ?", game.ID).Updates(game).Error
 	return db.DB.Save(game).Error
 }
 
 func DeleteGame(id string) error {
+	// Si querés tratar "no existe" como ErrNotFound:
+	// res := db.DB.Delete(&models.Game{}, id)
+	// if res.Error != nil {
+	//     return res.Error
+	// }
+	// if res.RowsAffected == 0 {
+	//     return ErrNotFound
+	// }
+	// return nil
 	return db.DB.Delete(&models.Game{}, id).Error
 }
 
@@ -67,6 +89,7 @@ func GetStats() (models.GameStats, error) {
 	genreCount := make(map[string]int)
 	var pendingCount int
 	var totalHours float64
+
 	for _, game := range games {
 		statusCount[game.Status]++
 		genreCount[game.Genre]++

@@ -32,6 +32,35 @@ const API = axios.create({
     },
 })
 
+// Interceptor para agregar token a las peticiones
+API.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token')
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+        }
+        return config
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
+)
+
+// Interceptor para manejar respuestas de error
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token expirado o inválido
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            window.location.reload()
+        }
+        return Promise.reject(error)
+    }
+)
+
+// Game endpoints
 export const getGames = () => API.get<Game[]>("/games/")
 export const getGameById = (id: number) => API.get<Game>(`/games/${id}`)
 export const searchGameByTitle = (title: string) => API.get<Game[]>(`/games/search?title=${title}`)
@@ -40,5 +69,37 @@ export const getStats = () => API.get("/stats")
 export const updateGame = (id: number, data: Partial<Game>) => API.put<Game>(`/games/${id}`, data)
 export const deleteGame = (id: number) => API.delete(`/games/${id}`)
 
+// Auth endpoints
+export interface LoginRequest {
+    username: string
+    password: string
+}
+
+export interface RegisterRequest {
+    username: string
+    email: string
+    password: string
+    firstName?: string
+    lastName?: string
+}
+
+export interface User {
+    id: number
+    username: string
+    email: string
+    firstName?: string
+    lastName?: string
+    createdAt: string
+    updatedAt: string
+}
+
+export interface AuthResponse {
+    token: string
+    user: User
+}
+
+export const login = (data: LoginRequest) => API.post<AuthResponse>("/auth/login", data)
+export const register = (data: RegisterRequest) => API.post<AuthResponse>("/auth/register", data)
+export const getProfile = () => API.get("/api/profile")
 
 export default API

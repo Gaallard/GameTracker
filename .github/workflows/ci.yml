@@ -1,0 +1,93 @@
+name: CI Tests & Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  backend:
+    name: Go Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+      
+      - name: Install testing tools
+        run: |
+          go install gotest.tools/gotestsum@latest
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          echo "${HOME}/go/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: go mod tidy
+      
+      - name: Run tests with coverage
+        run: |
+          gotestsum --format=standard-verbose --junitfile test-results-go.xml -- \
+            -covermode=atomic -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out > coverage.txt
+          go tool cover -html=coverage.out -o coverage.html
+      
+      - name: Check coverage threshold
+        run: |
+          awk '/total:/ { gsub("%","",$3); if ($3+0 < 70) { print "❌ Coverage below 70%: " $3"%"; exit 1 } else { print "✅ Coverage: " $3"%" } }' coverage.txt
+      
+      - name: Upload backend test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-reports
+          path: |
+            backend/test-results-go.xml
+            backend/coverage.*
+
+  frontend:
+    name: Vue Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/gameTracker
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests with coverage
+        run: npm run coverage
+      
+      - name: Upload frontend test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-reports
+          path: |
+            frontend/gameTracker/test-results-vue.xml
+            frontend/gameTracker/coverage/**
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Backend Lint
+        run: |
+          cd backend
+          go vet ./...
+          go fmt ./...
+      
+      - name: Frontend Lint
+        run: |
+          cd frontend/gameTracker
+          npm ci
+          npm run lint

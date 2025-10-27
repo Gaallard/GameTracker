@@ -34,6 +34,7 @@ func main() {
 
 	db.ConnectDB()
 	routes.SetupGameRoutes(r)
+	routes.SetupAuthRoutes(r)
 
 	// Get port from environment
 	port := os.Getenv("API_PORT")

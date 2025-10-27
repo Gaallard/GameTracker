@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+backend/vendor/
+
+# Testing artifacts
+backend/test-results-go.xml
+backend/coverage.out
+backend/coverage.txt
+backend/coverage.html
+frontend/gameTracker/test-results-vue.xml
+frontend/gameTracker/coverage/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+backend/main
+backend/gametracker
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
