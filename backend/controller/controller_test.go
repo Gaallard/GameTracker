@@ -197,3 +197,226 @@ func TestUpdateGame_NotFound(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Game not found", response["error"])
 }
+
+func TestDeleteGame_Success(t *testing.T) {
+	// Arrange
+	_, mock, _ := setupTestDB(t)
+	router := setupRouter()
+
+	// Mock para BEGIN, DELETE y COMMIT
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM `games` WHERE `games`.`id` = \\?").
+		WithArgs("1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/games/1", nil)
+	router.ServeHTTP(w, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, "Game deleted successfully", response["message"])
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetByTitle_Success(t *testing.T) {
+	// Arrange
+	_, mock, _ := setupTestDB(t)
+	router := setupRouter()
+
+	now := time.Now()
+	game := models.Game{
+		ID:           1,
+		Title:        "Test Game",
+		Platform:     "PC",
+		Genre:        "RPG",
+		Status:       "Completed",
+		Progress:     100,
+		HoursPlayed:  25.5,
+		PersonalNote: "Great game",
+		Score:        8,
+		CoverURL:     "http://example.com/cover.jpg",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	rows := sqlmock.NewRows([]string{
+		"id", "title", "platform", "genre", "status", "progress", "hours_played",
+		"personal_note", "score", "started_at", "finished_at", "cover_url",
+		"created_at", "updated_at",
+	}).AddRow(
+		game.ID, game.Title, game.Platform, game.Genre, game.Status, game.Progress,
+		game.HoursPlayed, game.PersonalNote, game.Score, game.StartedAt, game.FinishedAt,
+		game.CoverURL, game.CreatedAt, game.UpdatedAt,
+	)
+
+	mock.ExpectQuery(`SELECT \* FROM \`+"`games`"+` WHERE title LIKE \?`).
+		WithArgs("%Test%").
+		WillReturnRows(rows)
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/games/search/title?title=Test", nil)
+	router.ServeHTTP(w, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response []models.Game
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	require.Len(t, response, 1)
+	assert.Equal(t, game.Title, response[0].Title)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetByStatus_Success(t *testing.T) {
+	// Arrange
+	_, mock, _ := setupTestDB(t)
+	router := setupRouter()
+
+	now := time.Now()
+	game := models.Game{
+		ID:           1,
+		Title:        "Test Game",
+		Platform:     "PC",
+		Genre:        "RPG",
+		Status:       "Completed",
+		Progress:     100,
+		HoursPlayed:  25.5,
+		PersonalNote: "Great game",
+		Score:        8,
+		CoverURL:     "http://example.com/cover.jpg",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	rows := sqlmock.NewRows([]string{
+		"id", "title", "platform", "genre", "status", "progress", "hours_played",
+		"personal_note", "score", "started_at", "finished_at", "cover_url",
+		"created_at", "updated_at",
+	}).AddRow(
+		game.ID, game.Title, game.Platform, game.Genre, game.Status, game.Progress,
+		game.HoursPlayed, game.PersonalNote, game.Score, game.StartedAt, game.FinishedAt,
+		game.CoverURL, game.CreatedAt, game.UpdatedAt,
+	)
+
+	mock.ExpectQuery(`SELECT \* FROM \`+"`games`"+` WHERE status LIKE \?`).
+		WithArgs("%Completed%").
+		WillReturnRows(rows)
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/games/search/status?status=Completed", nil)
+	router.ServeHTTP(w, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response []models.Game
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	require.Len(t, response, 1)
+	assert.Equal(t, game.Status, response[0].Status)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetByGenre_Success(t *testing.T) {
+	// Arrange
+	_, mock, _ := setupTestDB(t)
+	router := setupRouter()
+
+	now := time.Now()
+	game := models.Game{
+		ID:           1,
+		Title:        "Test Game",
+		Platform:     "PC",
+		Genre:        "RPG",
+		Status:       "Completed",
+		Progress:     100,
+		HoursPlayed:  25.5,
+		PersonalNote: "Great game",
+		Score:        8,
+		CoverURL:     "http://example.com/cover.jpg",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	rows := sqlmock.NewRows([]string{
+		"id", "title", "platform", "genre", "status", "progress", "hours_played",
+		"personal_note", "score", "started_at", "finished_at", "cover_url",
+		"created_at", "updated_at",
+	}).AddRow(
+		game.ID, game.Title, game.Platform, game.Genre, game.Status, game.Progress,
+		game.HoursPlayed, game.PersonalNote, game.Score, game.StartedAt, game.FinishedAt,
+		game.CoverURL, game.CreatedAt, game.UpdatedAt,
+	)
+
+	mock.ExpectQuery(`SELECT \* FROM \`+"`games`"+` WHERE genre LIKE \?`).
+		WithArgs("%RPG%").
+		WillReturnRows(rows)
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/games/search/genre?genre=RPG", nil)
+	router.ServeHTTP(w, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response []models.Game
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	require.Len(t, response, 1)
+	assert.Equal(t, game.Genre, response[0].Genre)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetStats_Success(t *testing.T) {
+	// Arrange
+	_, mock, _ := setupTestDB(t)
+	router := setupRouter()
+
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{
+		"id", "title", "platform", "genre", "status", "progress", "hours_played",
+		"personal_note", "score", "started_at", "finished_at", "cover_url",
+		"created_at", "updated_at",
+	}).AddRow(
+		1, "Game 1", "PC", "RPG", "Completed", 100, 10.0, "Note", 8, &now, &now, "cover1.jpg", now, now,
+	).AddRow(
+		2, "Game 2", "PC", "Action", "In Progress", 50, 5.0, "Note", 0, &now, nil, "cover2.jpg", now, now,
+	).AddRow(
+		3, "Game 3", "PC", "RPG", "In Progress", 30, 15.0, "Note", 0, &now, nil, "cover3.jpg", now, now,
+	)
+
+	mock.ExpectQuery(`SELECT \* FROM \` + "`games`").
+		WillReturnRows(rows)
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/games/stats", nil)
+	router.ServeHTTP(w, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response models.GameStats
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, 3, response.TotalGames)
+	assert.Equal(t, 1, response.ByStatus["Completed"])
+	assert.Equal(t, 2, response.ByStatus["In Progress"])
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}

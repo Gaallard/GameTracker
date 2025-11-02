@@ -2,6 +2,9 @@
 setlocal enabledelayedexpansion
 REM Script para ejecutar pruebas unitarias del backend con cobertura
 
+REM Cambiar al directorio del script
+cd /d "%~dp0"
+
 echo 🔧 Instalando herramientas de testing...
 go install gotest.tools/gotestsum@latest
 go install github.com/jstemmer/go-junit-report/v2@latest
