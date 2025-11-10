@@ -22,6 +22,6 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov', 'cobertura'],
       reportsDirectory: './coverage',
     },
-    css: true,
-  },
+    css: true,
+  },
 })
