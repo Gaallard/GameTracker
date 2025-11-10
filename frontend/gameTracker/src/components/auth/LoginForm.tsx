@@ -34,8 +34,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
 
         try {
             await login(formData)
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
         }
     }
 

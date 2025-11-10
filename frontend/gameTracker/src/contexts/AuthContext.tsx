@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { login as loginAPI, register as registerAPI, type User, type LoginRequest, type RegisterRequest } from '@/services/api'
 
-interface AuthContextType {
+export interface AuthContextType {
     user: User | null
     token: string | null
     isAuthenticated: boolean
@@ -13,6 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
     const context = useContext(AuthContext)
     if (context === undefined) {
@@ -62,9 +63,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Guardar en localStorage
             localStorage.setItem('token', newToken)
             localStorage.setItem('user', JSON.stringify(newUser))
-        } catch (error: any) {
+        } catch (error) {
             console.error('Login error:', error)
-            throw new Error(error.response?.data?.error || 'Error al iniciar sesión')
+            const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Error al iniciar sesión'
+            throw new Error(errorMessage)
         } finally {
             setIsLoading(false)
         }
@@ -82,9 +84,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Guardar en localStorage
             localStorage.setItem('token', newToken)
             localStorage.setItem('user', JSON.stringify(newUser))
-        } catch (error: any) {
+        } catch (error) {
             console.error('Register error:', error)
-            throw new Error(error.response?.data?.error || 'Error al registrarse')
+            const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Error al registrarse'
+            throw new Error(errorMessage)
         } finally {
             setIsLoading(false)
         }

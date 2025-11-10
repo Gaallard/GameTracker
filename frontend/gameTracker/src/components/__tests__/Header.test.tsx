@@ -1,9 +1,10 @@
 import React from 'react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import type { AuthContextType } from '../../contexts/AuthContext'
 
 // 1) Estado hoisted para el mock del contexto (no rompe con el hoisting de vi.mock)
-const auth = vi.hoisted(() => ({ state: {} as any }))
+const auth = vi.hoisted(() => ({ state: {} as Partial<AuthContextType> }))
 
 // 2) Mock del contexto usando el MISMO path relativo que usa Header.tsx
 vi.mock('../../contexts/AuthContext', () => ({
@@ -12,14 +13,13 @@ vi.mock('../../contexts/AuthContext', () => ({
 
 // 3) Mock del botón por la ruta que resuelve Header ('./button' -> '../ui/button' desde este test)
 vi.mock('../ui/button', () => {
-  const React = require('react')
-  const Button = (props: any) => React.createElement('button', props, props.children)
+  const Button = (props: React.ComponentProps<'button'>) => React.createElement('button', props, props.children)
   return { Button }
 })
 
 // 4) Import del Header y resolución default/named
 import * as HeaderModule from '../ui/Header'
-const Header = (HeaderModule as any).default ?? (HeaderModule as any).Header
+const Header = (HeaderModule.default ?? HeaderModule.Header) as React.ComponentType
 
 // 5) Mock window.confirm
 const mockConfirm = vi.fn()

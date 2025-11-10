@@ -35,7 +35,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           gotestsum --format=standard-verbose --junitfile test-results-go.xml -- \
-            -covermode=atomic -coverprofile=coverage.out ./...
+            -covermode=atomic -coverprofile=coverage.out -coverpkg=./service,./controller,./models ./service ./controller ./models
           go tool cover -func=coverage.out > coverage.txt
           go tool cover -html=coverage.out -o coverage.html
       
@@ -95,11 +95,11 @@ jobs:
           cd frontend/gameTracker
           npm ci
           npm run lint
-          
+
   docker-images:
     name: Build & Push Docker Images to GHCR
     runs-on: ubuntu-latest
-    needs: [backend, frontend]   # solo corre si los tests de back y front pasan
+    needs: [backend, frontend]   
     steps:
       - uses: actions/checkout@v4
 

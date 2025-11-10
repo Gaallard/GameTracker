@@ -71,8 +71,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
                 firstName: formData.firstName || undefined,
                 lastName: formData.lastName || undefined,
             })
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al registrarse')
         }
     }
 
