@@ -13,7 +13,8 @@ RUN npm ci
 COPY . .
 
 # Accept build arguments for environment variables
-ARG VITE_API_URL
+# If VITE_API_URL is not provided, use empty string for relative paths (nginx will proxy)
+ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
@@ -43,5 +44,5 @@ ENV BACKEND_URL=http://localhost:8080
 EXPOSE 80
 
 # Use custom entrypoint that processes template before starting nginx
-ENTRYPOINT ["/custom-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
