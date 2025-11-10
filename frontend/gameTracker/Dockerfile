@@ -22,6 +22,9 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
 # Copy built files to nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
@@ -35,4 +38,4 @@ ENV BACKEND_URL=http://localhost:8080
 EXPOSE 80
 
 # nginx:alpine automatically processes .template files in /etc/nginx/templates/
-# No need for custom CMD, the default entrypoint handles it
+# The entrypoint script /docker-entrypoint.sh processes templates before starting nginx
