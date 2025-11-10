@@ -1,35 +1,35 @@
-# Build stage
-FROM node:18-alpine AS builder
+# ---------- STAGE 1: Build de Vite/React ----------
+    FROM node:20-alpine AS builder
 
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Accept build arguments for environment variables
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
-# Build the application
-RUN npm run build
-
-# Production stage
-FROM nginx:alpine
-
-# Copy built files to nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+    WORKDIR /app
+    
+    # Copiar archivos de dependencias
+    COPY package*.json ./
+    
+    # Instalar dependencias
+    RUN npm ci
+    
+    # Copiar el código fuente
+    COPY . .
+    
+    # Inyectar variable de entorno para la API (Render)
+    ENV VITE_API_URL="https://gametracker-backend-rf2e.onrender.com"
+    
+    # Build de producción
+    RUN npm run build
+    
+    # ---------- STAGE 2: nginx para servir los archivos ----------
+    FROM nginx:alpine
+    
+    # Limpiar archivos por defecto
+    RUN rm -rf /usr/share/nginx/html/*
+    
+    # Copiar el build del frontend
+    COPY --from=builder /app/dist /usr/share/nginx/html
+    
+    # Exponer el puerto estándar
+    EXPOSE 80
+    
+    # Iniciar nginx (config por defecto, sin upstreams)
+    CMD ["nginx", "-g", "daemon off;"]
+    
