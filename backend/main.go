@@ -49,14 +49,29 @@ func main() {
 	log.Printf("Allowed CORS origins: %v", allowedOrigins)
 
 	r := gin.Default()
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     allowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
-		AllowCredentials: true,
-		ExposeHeaders:    []string{"Content-Length"},
-		MaxAge:           12 * 3600, // 12 hours
-	}))
+
+	// Configure CORS with flexible origin handling
+	corsConfig := cors.Config{
+		AllowMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
+		ExposeHeaders: []string{"Content-Length", "Content-Type"},
+		MaxAge:        12 * 3600, // 12 hours
+	}
+
+	// If CORS_ORIGINS is set, use specific origins with credentials
+	if os.Getenv("CORS_ORIGINS") != "" {
+		corsConfig.AllowOrigins = allowedOrigins
+		corsConfig.AllowCredentials = true
+		log.Printf("CORS: Using specific origins with credentials")
+	} else {
+		// Allow all origins (for development or when frontend uses proxy)
+		// Note: Cannot use AllowCredentials with AllowAllOrigins
+		corsConfig.AllowAllOrigins = true
+		corsConfig.AllowCredentials = false
+		log.Printf("CORS: Allowing all origins (no credentials)")
+	}
+
+	r.Use(cors.New(corsConfig))
 
 	db.ConnectDB()
 	routes.SetupGameRoutes(r)
