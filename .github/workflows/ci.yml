@@ -109,7 +109,8 @@ jobs:
 
       - name: Build & push backend image
         run: |
-          BACKEND_IMAGE="ghcr.io/${{ github.repository_owner }}/gametracker-backend"
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          BACKEND_IMAGE="ghcr.io/${REPO_OWNER}/gametracker-backend"
           TAG_SHA="${{ github.sha }}"
 
           # build
@@ -124,7 +125,8 @@ jobs:
 
       - name: Build & push frontend image
         run: |
-          FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/gametracker-frontend"
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          FRONTEND_IMAGE="ghcr.io/${REPO_OWNER}/gametracker-frontend"
           TAG_SHA="${{ github.sha }}"
 
           # build
