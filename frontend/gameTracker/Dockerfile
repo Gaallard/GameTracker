@@ -31,11 +31,17 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
+# Save original entrypoint and copy custom entrypoint script
+RUN cp /docker-entrypoint.sh /docker-entrypoint.sh.original
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Set default backend URL if not provided
 ENV BACKEND_URL=http://localhost:8080
 
 # Expose port
 EXPOSE 80
 
-# nginx:alpine automatically processes .template files in /etc/nginx/templates/
-# The entrypoint script /docker-entrypoint.sh processes templates before starting nginx
+# Use custom entrypoint that processes template before starting nginx
+ENTRYPOINT ["/custom-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
