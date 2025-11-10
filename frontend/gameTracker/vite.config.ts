@@ -1,24 +1,16 @@
-// vitest.config.ts
-import { defineConfig } from 'vitest/config'
+// vite.config.ts
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
 import { URL } from 'node:url'
 
 export default defineConfig({
+  // 👇 ESTO es lo importante para que Render sirva bien los assets
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/test/setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
-    },
-    css: true,
   },
 })

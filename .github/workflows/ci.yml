@@ -138,3 +138,4 @@ jobs:
           # push ambas tags
           docker push "$FRONTEND_IMAGE:$TAG_SHA"
           docker push "$FRONTEND_IMAGE:latest"
+
