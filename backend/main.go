@@ -3,10 +3,12 @@ package main
 import (
 	"gametracker/db"
 	"gametracker/routes"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -24,12 +26,36 @@ func main() {
 	}
 	log.Printf("Starting GameTracker in %s mode with log level: %s", ginMode, logLevel)
 
+	// Configure CORS
+	allowedOrigins := []string{
+		"http://localhost",
+		"http://localhost:80",
+		"http://localhost:3000",
+		"http://localhost:8080",
+		"http://localhost:5173",
+	}
+
+	// Add origins from environment variable (comma-separated)
+	if corsOrigins := os.Getenv("CORS_ORIGINS"); corsOrigins != "" {
+		origins := strings.Split(corsOrigins, ",")
+		for _, origin := range origins {
+			origin = strings.TrimSpace(origin)
+			if origin != "" {
+				allowedOrigins = append(allowedOrigins, origin)
+			}
+		}
+	}
+
+	log.Printf("Allowed CORS origins: %v", allowedOrigins)
+
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "http://localhost:80", "http://localhost:3000", "http://localhost:8080", "http://localhost:5173"}, // URLs del frontend
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		AllowCredentials: true,
+		ExposeHeaders:    []string{"Content-Length"},
+		MaxAge:           12 * 3600, // 12 hours
 	}))
 
 	db.ConnectDB()
