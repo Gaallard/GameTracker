@@ -20,9 +20,12 @@ var jwtSecret = []byte("gametracker_secret_key_2024") // En producción usar var
 
 // Register crea un nuevo usuario
 func (s *AuthService) Register(req models.RegisterRequest) (*models.User, error) {
-	// Verificar si el usuario ya existe
-	var existingUser models.User
-	if err := db.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existingUser).Error; err == nil {
+	// Verificar si el usuario ya existe (solo verificar existencia, no cargar datos)
+	var count int64
+	if err := db.DB.Model(&models.User{}).Where("username = ? OR email = ?", req.Username, req.Email).Count(&count).Error; err != nil {
+		return nil, errors.New("error al verificar usuario existente")
+	}
+	if count > 0 {
 		return nil, errors.New("usuario o email ya existe")
 	}
 

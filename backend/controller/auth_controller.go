@@ -32,6 +32,13 @@ func (ac *AuthController) Register(c *gin.Context) {
 
 	user, err := ac.authService.Register(req)
 	if err != nil {
+		// Si el error es que el usuario ya existe, devolver 409 Conflict
+		if err.Error() == "usuario o email ya existe" {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
