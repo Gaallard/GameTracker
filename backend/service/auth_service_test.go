@@ -80,6 +80,64 @@ func TestAuthService_Register_UserExists(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestAuthService_Register_CountError(t *testing.T) {
+	_, mock, sqlDB := setupTestDB(t)
+	defer sqlDB.Close()
+
+	req := models.RegisterRequest{
+		Username: "anyuser",
+		Email:    "any@example.com",
+		Password: "password123",
+	}
+
+	// Simular error en la consulta de verificación de existencia
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("anyuser", "any@example.com").
+		WillReturnError(assert.AnError)
+
+	service := NewAuthService()
+	user, err := service.Register(req)
+
+	require.Error(t, err)
+	assert.Nil(t, user)
+	assert.Contains(t, err.Error(), "error al verificar usuario existente")
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestAuthService_Register_CreateError(t *testing.T) {
+	_, mock, sqlDB := setupTestDB(t)
+	defer sqlDB.Close()
+
+	req := models.RegisterRequest{
+		Username:  "newuser",
+		Email:     "new@example.com",
+		Password:  "password123",
+		FirstName: "New",
+		LastName:  "User",
+	}
+
+	// Usuario no existe
+	countRows := sqlmock.NewRows([]string{"count"}).AddRow(0)
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("newuser", "new@example.com").
+		WillReturnRows(countRows)
+
+	// Fallo al crear usuario
+	mock.ExpectBegin()
+	mock.ExpectExec("^INSERT INTO `users`").
+		WillReturnError(assert.AnError)
+	mock.ExpectRollback()
+
+	service := NewAuthService()
+	user, err := service.Register(req)
+
+	require.Error(t, err)
+	assert.Nil(t, user)
+	assert.Contains(t, err.Error(), "error al crear usuario")
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
 func TestAuthService_Login_UserNotFound(t *testing.T) {
 	_, mock, sqlDB := setupTestDB(t)
 	defer sqlDB.Close()

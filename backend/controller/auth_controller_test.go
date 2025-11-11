@@ -168,3 +168,35 @@ func TestAuthController_GetProfile_Unauthenticated(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
+func TestAuthController_Register_Conflict(t *testing.T) {
+	_, mock, sqlDB := setupTestDB(t)
+	defer sqlDB.Close()
+
+	req := models.RegisterRequest{
+		Username:  "existinguser",
+		Email:     "existing@example.com",
+		Password:  "password123",
+		FirstName: "Ex",
+		LastName:  "Isting",
+	}
+
+	// Existe previamente (count > 0)
+	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("existinguser", "existing@example.com").
+		WillReturnRows(countRows)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	authController := NewAuthController()
+	router.POST("/register", authController.Register)
+
+	w := httptest.NewRecorder()
+	jsonData, _ := json.Marshal(req)
+	req_http, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonData))
+	req_http.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req_http)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
