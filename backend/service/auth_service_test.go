@@ -28,11 +28,16 @@ func TestAuthService_Register_Success(t *testing.T) {
 		LastName:  "User",
 	}
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
-		WillReturnError(gorm.ErrRecordNotFound)
+	// Mock Count query - user doesn't exist (count = 0)
+	// GORM generates: SELECT count(*) FROM `users` WHERE username = ? OR email = ?
+	countRows := sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("testuser", "test@example.com").
+		WillReturnRows(countRows)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `users`").
+	mock.ExpectExec("^INSERT INTO `users`").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -57,11 +62,13 @@ func TestAuthService_Register_UserExists(t *testing.T) {
 		Password: "password123",
 	}
 
-	rows := sqlmock.NewRows([]string{"id", "username", "email"}).
-		AddRow(1, "existinguser", "existing@example.com")
-
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
-		WillReturnRows(rows)
+	// Mock Count query - user exists (count > 0)
+	// GORM generates: SELECT count(*) FROM `users` WHERE username = ? OR email = ?
+	countRows := sqlmock.NewRows([]string{"count"}).
+		AddRow(1)
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("existinguser", "existing@example.com").
+		WillReturnRows(countRows)
 
 	service := NewAuthService()
 	user, err := service.Register(req)
@@ -82,7 +89,8 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 		Password: "password123",
 	}
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
+	mock.ExpectQuery("^SELECT \\* FROM `users` WHERE username = \\? OR email = \\? ORDER BY `users`.`id` LIMIT \\?$").
+		WithArgs("nonexistent", "nonexistent", 1).
 		WillReturnError(gorm.ErrRecordNotFound)
 
 	service := NewAuthService()
@@ -147,7 +155,8 @@ func TestAuthService_Login_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password", "first_name", "last_name", "created_at", "updated_at"}).
 		AddRow(1, "testuser", "test@example.com", hashedPassword, "Test", "User", time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
+	mock.ExpectQuery("^SELECT \\* FROM `users` WHERE username = \\? OR email = \\? ORDER BY `users`.`id` LIMIT \\?$").
+		WithArgs("testuser", "testuser", 1).
 		WillReturnRows(rows)
 
 	authResponse, err := service.Login(req)
@@ -181,7 +190,8 @@ func TestAuthService_ValidateToken_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password", "first_name", "last_name", "created_at", "updated_at"}).
 		AddRow(1, "testuser", "test@example.com", hashedPassword, "Test", "User", time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
+	mock.ExpectQuery("^SELECT \\* FROM `users` WHERE username = \\? OR email = \\? ORDER BY `users`.`id` LIMIT \\?$").
+		WithArgs("testuser", "testuser", 1).
 		WillReturnRows(rows)
 
 	// Login to get valid token
@@ -218,7 +228,8 @@ func TestAuthService_GetUserFromToken_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password", "first_name", "last_name", "created_at", "updated_at"}).
 		AddRow(1, "testuser", "test@example.com", hashedPassword, "Test", "User", time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
+	mock.ExpectQuery("^SELECT \\* FROM `users` WHERE username = \\? OR email = \\? ORDER BY `users`.`id` LIMIT \\?$").
+		WithArgs("testuser", "testuser", 1).
 		WillReturnRows(rows)
 
 	// Login to get valid token

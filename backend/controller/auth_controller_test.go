@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestNewAuthController(t *testing.T) {
@@ -33,8 +32,13 @@ func TestAuthController_Register_Success(t *testing.T) {
 		LastName:  "User",
 	}
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
-		WillReturnError(gorm.ErrRecordNotFound)
+	// Mock Count query - user doesn't exist (count = 0)
+	// GORM generates: SELECT count(*) FROM `users` WHERE username = ? OR email = ?
+	countRows := sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	mock.ExpectQuery("^SELECT count\\(\\*\\) FROM `users` WHERE username = \\? OR email = \\?$").
+		WithArgs("newuser", "newuser@example.com").
+		WillReturnRows(countRows)
 
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO `users`").
@@ -92,7 +96,8 @@ func TestAuthController_Login_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password", "first_name", "last_name", "created_at", "updated_at"}).
 		AddRow(1, "testuser", "test@example.com", hashedPassword, "Test", "User", time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT .* FROM `users` WHERE username = .* OR email = .* ORDER BY `users`.`id` LIMIT .").
+	mock.ExpectQuery("^SELECT \\* FROM `users` WHERE username = \\? OR email = \\? ORDER BY `users`.`id` LIMIT \\?$").
+		WithArgs("testuser", "testuser", 1).
 		WillReturnRows(rows)
 
 	gin.SetMode(gin.TestMode)
